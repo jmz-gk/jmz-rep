@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OpsBoard — Access &amp; KPI Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink-900:#0A1220;
+    --ink-800:#101B2E;
+    --ink-700:#16223A;
+    --panel:#131F35;
+    --line:#233150;
+    --amber:#E8A33D;
+    --amber-dim:#8a6423;
+    --green:#3ADC97;
+    --red:#E8574F;
+    --text:#E9EEF6;
+    --muted:#8493AC;
+    --muted-2:#5C6C88;
+    --radius:14px;
+    --font-display:'Sora',sans-serif;
+    --font-body:'Inter',sans-serif;
+    --font-mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--ink-900);
+    color:var(--text);
+    font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--amber);color:#1a1200;}
+  button{font-family:inherit;}
+  a{color:inherit;}
+
+  /* ---------- Utility ---------- */
+  .hidden{display:none !important;}
+  .mono{font-family:var(--font-mono);}
+
+  /* ---------- LOGIN VIEW ---------- */
+  #view-auth{
+    min-height:100vh;
+    display:grid;
+    grid-template-columns:1.1fr 1fr;
+  }
+  @media (max-width:860px){
+    #view-auth{grid-template-columns:1fr;}
+    .auth-side{display:none;}
+  }
+  .auth-side{
+    position:relative;
+    background:
+      radial-gradient(circle at 20% 15%, rgba(232,163,61,0.10), transparent 45%),
+      radial-gradient(circle at 80% 85%, rgba(58,220,151,0.06), transparent 45%),
+      var(--ink-800);
+    padding:56px;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    border-right:1px solid var(--line);
+    overflow:hidden;
+  }
+  .brandmark{
+    font-family:var(--font-display);
+    font-weight:800;
+    font-size:22px;
+    letter-spacing:0.5px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .brandmark .dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green);}
+  .auth-hero h1{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:44px;
+    line-height:1.08;
+    margin:0 0 18px;
+    max-width:9.5ch;
+  }
+  .auth-hero p{
+    color:var(--muted);
+    font-size:15.5px;
+    line-height:1.6;
+    max-width:38ch;
+    margin:0;
+  }
+  .ticker-wrap{
+    border-top:1px solid var(--line);
+    padding-top:20px;
+    overflow:hidden;
+    position:relative;
+    height:22px;
+  }
+  .ticker{
+    display:flex;
+    gap:40px;
+    position:absolute;
+    white-space:nowrap;
+    animation:scrollTicker 22s linear infinite;
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    color:var(--muted-2);
+  }
+  .ticker span b{color:var(--green);font-weight:600;}
+  .ticker span i{color:var(--amber);font-style:normal;font-weight:600;}
+  @keyframes scrollTicker{
+    from{transform:translateX(0);}
+    to{transform:translateX(-50%);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .ticker{animation:none;}
+  }
+
+  .auth-form-col{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:40px 24px;
+  }
+  .auth-box{
+    width:100%;
+    max-width:380px;
+  }
+  .auth-box .eyebrow{
+    font-family:var(--font-mono);
+    font-size:12px;
+    letter-spacing:1.5px;
+    color:var(--muted-2);
+    text-transform:uppercase;
+    margin-bottom:10px;
+  }
+  .auth-box h2{
+    font-family:var(--font-display);
+    font-size:26px;
+    margin:0 0 6px;
+    font-weight:700;
+  }
+  .auth-box .sub{
+    color:var(--muted);
+    font-size:14px;
+    margin-bottom:28px;
+  }
+  .field{margin-bottom:16px;}
+  .field label{
+    display:block;
+    font-size:12.5px;
+    color:var(--muted);
+    margin-bottom:6px;
+    font-weight:500;
+  }
+  .field input, .field select{
+    width:100%;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px 14px;
+    color:var(--text);
+    font-size:14.5px;
+    outline:none;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .field input:focus, .field select:focus{
+    border-color:var(--amber);
+    box-shadow:0 0 0 3px rgba(232,163,61,0.15);
+  }
+  .field input::placeholder{color:var(--muted-2);}
+
+  .btn-primary{
+    width:100%;
+    background:var(--amber);
+    color:#1a1200;
+    border:none;
+    border-radius:10px;
+    padding:13px 16px;
+    font-weight:700;
+    font-size:14.5px;
+    cursor:pointer;
+    transition:filter .15s ease, transform .05s ease;
+    margin-top:6px;
+  }
+  .btn-primary:hover{filter:brightness(1.08);}
+  .btn-primary:active{transform:translateY(1px);}
+  .btn-primary:focus-visible, .link-btn:focus-visible, input:focus-visible, select:focus-visible{
+    outline:2px solid var(--amber);
+    outline-offset:2px;
+  }
+
+  .switch-row{
+    text-align:center;
+    margin-top:20px;
+    font-size:13.5px;
+    color:var(--muted);
+  }
+  .link-btn{
+    background:none;border:none;color:var(--amber);
+    font-weight:600;cursor:pointer;font-size:13.5px;padding:0;
+  }
+  .link-btn:hover{text-decoration:underline;}
+
+  .alert{
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+    border-radius:10px;
+    padding:11px 13px;
+    font-size:13px;
+    margin-bottom:16px;
+    line-height:1.45;
+  }
+  .alert-error{background:rgba(232,87,79,0.1);border:1px solid rgba(232,87,79,0.4);color:#ffb3ae;}
+  .alert-success{background:rgba(58,220,151,0.1);border:1px solid rgba(58,220,151,0.4);color:#a9f5d4;}
+
+  /* ---------- DASHBOARD VIEW ---------- */
+  #view-dashboard{min-height:100vh;display:none;}
+  #view-dashboard.active{display:flex;}
+  .app-shell{display:flex;width:100%;}
+
+  .sidebar{
+    width:236px;
+    flex-shrink:0;
+    background:var(--ink-800);
+    border-right:1px solid var(--line);
+    padding:24px 18px;
+    display:flex;
+    flex-direction:column;
+    min-height:100vh;
+  }
+  .sidebar .brandmark{margin-bottom:34px;}
+  .nav-section-label{
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:1.5px;
+    color:var(--muted-2);
+    text-transform:uppercase;
+    margin:18px 0 8px 10px;
+  }
+  .nav-item{
+    display:flex;align-items:center;gap:10px;
+    padding:10px 12px;
+    border-radius:8px;
+    color:var(--muted);
+    font-size:14px;
+    font-weight:500;
+    cursor:pointer;
+    margin-bottom:2px;
+  }
+  .nav-item.active{background:var(--panel);color:var(--text);}
+  .nav-item:hover{color:var(--text);}
+  .nav-item .ic{width:7px;height:7px;border-radius:2px;background:currentColor;opacity:.6;flex-shrink:0;}
+
+  .sidebar-footer{margin-top:auto;border-top:1px solid var(--line);padding-top:16px;}
+  .who{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .avatar{
+    width:34px;height:34px;border-radius:9px;
+    background:linear-gradient(135deg, var(--amber), #b5731f);
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-display);font-weight:700;font-size:14px;color:#1a1200;
+    flex-shrink:0;
+  }
+  .who .name{font-size:13.5px;font-weight:600;}
+  .who .role{font-size:11.5px;color:var(--muted-2);}
+  .logout-btn{
+    width:100%;background:transparent;border:1px solid var(--line);
+    color:var(--muted);padding:9px;border-radius:8px;font-size:13px;cursor:pointer;
+  }
+  .logout-btn:hover{border-color:var(--red);color:#ffb3ae;}
+
+  .main{
+    flex:1;
+    padding:32px 40px 60px;
+    min-width:0;
+  }
+  .topbar{
+    display:flex;justify-content:space-between;align-items:flex-start;
+    margin-bottom:28px;flex-wrap:wrap;gap:16px;
+  }
+  .topbar h1{
+    font-family:var(--font-display);
+    font-size:26px;margin:0 0 6px;font-weight:700;
+  }
+  .topbar .meta{color:var(--muted);font-size:13.5px;}
+  .badge-tier{
+    font-family:var(--font-mono);
+    font-size:11.5px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color:var(--amber);
+    border:1px solid var(--amber-dim);
+    background:rgba(232,163,61,0.08);
+    padding:6px 12px;
+    border-radius:20px;
+    height:fit-content;
+  }
+
+  .kpi-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(200px,1fr));
+    gap:16px;
+    margin-bottom:32px;
+  }
+  .kpi-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:20px;
+    position:relative;
+    overflow:hidden;
+  }
+  .kpi-card .label{font-size:12.5px;color:var(--muted);margin-bottom:10px;font-weight:500;}
+  .kpi-card .value{
+    font-family:var(--font-mono);
+    font-size:30px;font-weight:700;line-height:1;margin-bottom:8px;
+  }
+  .kpi-card .delta{font-size:12.5px;font-weight:600;}
+  .delta.up{color:var(--green);}
+  .delta.down{color:var(--red);}
+  .delta.flat{color:var(--muted-2);}
+
+  .panel-row{display:grid;grid-template-columns:1.4fr 1fr;gap:20px;}
+  @media (max-width:980px){.panel-row{grid-template-columns:1fr;}}
+  .panel{
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:22px;
+  }
+  .panel h3{
+    font-family:var(--font-display);font-size:15.5px;margin:0 0 16px;font-weight:600;
+  }
+  .table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  .table th{
+    text-align:left;color:var(--muted-2);font-weight:600;font-size:11.5px;
+    text-transform:uppercase;letter-spacing:0.5px;padding:0 10px 10px;
+    border-bottom:1px solid var(--line);
+  }
+  .table td{padding:11px 10px;border-bottom:1px solid rgba(35,49,80,0.5);}
+  .table tr:last-child td{border-bottom:none;}
+  .pill{
+    display:inline-block;padding:3px 9px;border-radius:20px;font-size:11.5px;font-weight:600;
+  }
+  .pill-green{background:rgba(58,220,151,0.12);color:var(--green);}
+  .pill-amber{background:rgba(232,163,61,0.12);color:var(--amber);}
+  .pill-red{background:rgba(232,87,79,0.12);color:#ff9d97;}
+
+  .bar-list .bar-row{margin-bottom:14px;}
+  .bar-row .bar-top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;color:var(--muted);}
+  .bar-track{height:7px;background:var(--ink-700);border-radius:4px;overflow:hidden;}
+  .bar-fill{height:100%;background:linear-gradient(90deg, var(--amber), #ffd08a);border-radius:4px;}
+
+  .empty-note{color:var(--muted-2);font-size:13px;font-style:italic;}
+
+  .export-btn{
+    background:var(--panel);border:1px solid var(--line);color:var(--text);
+    padding:9px 14px;border-radius:8px;font-size:13px;cursor:pointer;font-weight:600;
+  }
+  .export-btn:hover{border-color:var(--amber);color:var(--amber);}
+</style>
+</head>
+<body>
+
+<!-- ================= AUTH VIEW ================= -->
+<div id="view-auth">
+  <div class="auth-side">
+    <div class="brandmark"><span class="dot"></span> OpsBoard</div>
+    <div class="auth-hero">
+      <h1>Every shift, measured.</h1>
+      <p>Sign in with your access credentials to reach the KPI console tuned to your role — leader, manager, supervisor, or employee.</p>
+    </div>
+    <div class="ticker-wrap">
+      <div class="ticker" id="ticker"></div>
+    </div>
+  </div>
+
+  <div class="auth-form-col">
+    <div class="auth-box">
+
+      <!-- LOGIN FORM -->
+      <div id="login-form">
+        <div class="eyebrow">Access console</div>
+        <h2>Sign in</h2>
+        <div class="sub">Enter the username and password from your access record.</div>
+        <div id="login-alert"></div>
+        <form id="loginFormEl" novalidate>
+          <div class="field">
+            <label for="login-username">Username</label>
+            <input type="text" id="login-username" autocomplete="username" placeholder="e.g. jmanza" />
+          </div>
+          <div class="field">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" autocomplete="current-password" placeholder="••••••••" />
+          </div>
+          <button type="submit" class="btn-primary">Sign in</button>
+        </form>
+        <div class="switch-row">
+          No access record yet? <button class="link-btn" id="goSignup">Create one</button>
+        </div>
+      </div>
+
+      <!-- SIGNUP FORM -->
+      <div id="signup-form" class="hidden">
+        <div class="eyebrow">New access record</div>
+        <h2>Sign up</h2>
+        <div class="sub">This adds a new row to the access list. Download the updated file to keep it.</div>
+        <div id="signup-alert"></div>
+        <form id="signupFormEl" novalidate>
+          <div class="field">
+            <label for="su-eid">Employee ID (EID)</label>
+            <input type="text" id="su-eid" placeholder="e.g. 000000002" />
+          </div>
+          <div class="field">
+            <label for="su-name">Employee name</label>
+            <input type="text" id="su-name" placeholder="Full name" />
+          </div>
+          <div class="field">
+            <label for="su-msid">MSID</label>
+            <input type="text" id="su-msid" placeholder="e.g. jsmith" />
+          </div>
+          <div class="field">
+            <label for="su-role">Role</label>
+            <select id="su-role">
+              <option value="Leader">Leader</option>
+              <option value="Manager">Manager</option>
+              <option value="Supervisor">Supervisor</option>
+              <option value="Employee" selected>Employee</option>
+              <option value="Admin">Admin</option>
+              <option value="Agent">Agent</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="su-username">Username</label>
+            <input type="text" id="su-username" placeholder="Choose a username" />
+          </div>
+          <div class="field">
+            <label for="su-password">Password</label>
+            <input type="password" id="su-password" placeholder="Choose a password" />
+          </div>
+          <button type="submit" class="btn-primary">Create account</button>
+        </form>
+        <div class="switch-row">
+          Already have access? <button class="link-btn" id="goLogin">Sign in instead</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ================= DASHBOARD VIEW ================= -->
+<div id="view-dashboard">
+  <div class="app-shell">
+    <div class="sidebar">
+      <div class="brandmark"><span class="dot"></span> OpsBoard</div>
+
+      <div class="nav-section-label">Console</div>
+      <div class="nav-item active"><span class="ic"></span> KPI overview</div>
+      <div class="nav-item"><span class="ic"></span> Team performance</div>
+      <div class="nav-item"><span class="ic"></span> Reports</div>
+
+      <div class="nav-section-label">Account</div>
+      <div class="nav-item" id="navExport"><span class="ic"></span> Export access list</div>
+
+      <div class="sidebar-footer">
+        <div class="who">
+          <div class="avatar" id="avatarInitials">--</div>
+          <div>
+            <div class="name" id="whoName">—</div>
+            <div class="role" id="whoRole">—</div>
+          </div>
+        </div>
+        <button class="logout-btn" id="logoutBtn">Sign out</button>
+      </div>
+    </div>
+
+    <div class="main" id="dashboardMain">
+      <!-- filled by JS -->
+    </div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   DATA LAYER
+   The access list is embedded here (from Access_List.csv) and held in
+   memory. Sign-ups append to this in-memory list; use "Export access
+   list" to download the updated CSV and replace the source file.
+===================================================================== */
+const CSV_HEADERS = ["EID","Employee Name","MSID","Role","Username","Password"];
+
+let accessList = [
+  {EID:"000000000", "Employee Name":"Juunas", MSID:"jmanza", Role:"Admin", Username:"jmanza", Password:"P@ss1"},
+  {EID:"000000001", "Employee Name":"Kim",    MSID:"kmanza", Role:"Agent", Username:"kmanza", Password:"P@ss2"},
+];
+
+let currentUser = null;
+
+/* ---------------- role tiering ----------------
+   Maps whatever is in the Role column to one of the four KPI tiers.
+   Unrecognized roles fall back to Employee (safest default view). */
+function tierFor(role){
+  const r = (role || "").toLowerCase();
+  if (r.includes("lead") || r.includes("admin")) return "Leader";
+  if (r.includes("manager")) return "Manager";
+  if (r.includes("supervisor")) return "Supervisor";
+  return "Employee"; // covers "Agent", "Employee", or anything unrecognized
+}
+
+/* ---------------- CSV export ---------------- */
+function toCSV(rows){
+  const esc = v => {
+    v = String(v ?? "");
+    return /[",\n]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v;
+  };
+  const lines = [CSV_HEADERS.join(",")];
+  rows.forEach(r => lines.push(CSV_HEADERS.map(h => esc(r[h])).join(",")));
+  return lines.join("\r\n");
+}
+
+function downloadCSV(){
+  const csv = toCSV(accessList);
+  const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "Access_List.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ---------------- view switching ---------------- */
+const loginForm = document.getElementById("login-form");
+const signupForm = document.getElementById("signup-form");
+document.getElementById("goSignup").onclick = () => {
+  loginForm.classList.add("hidden");
+  signupForm.classList.remove("hidden");
+  document.getElementById("signup-alert").innerHTML = "";
+};
+document.getElementById("goLogin").onclick = () => {
+  signupForm.classList.add("hidden");
+  loginForm.classList.remove("hidden");
+  document.getElementById("login-alert").innerHTML = "";
+};
+
+/* ---------------- login ---------------- */
+document.getElementById("loginFormEl").addEventListener("submit", function(e){
+  e.preventDefault();
+  const u = document.getElementById("login-username").value.trim();
+  const p = document.getElementById("login-password").value;
+  const alertBox = document.getElementById("login-alert");
+  alertBox.innerHTML = "";
+
+  if (!u || !p){
+    alertBox.innerHTML = `<div class="alert alert-error">Enter both a username and a password.</div>`;
+    return;
+  }
+
+  const match = accessList.find(r => r.Username === u && r.Password === p);
+  if (!match){
+    alertBox.innerHTML = `<div class="alert alert-error">Username or password is incorrect. Check your access record and try again.</div>`;
+    return;
+  }
+
+  currentUser = match;
+  enterDashboard(match);
+});
+
+/* ---------------- signup ---------------- */
+document.getElementById("signupFormEl").addEventListener("submit", function(e){
+  e.preventDefault();
+  const alertBox = document.getElementById("signup-alert");
+  alertBox.innerHTML = "";
+
+  const eid = document.getElementById("su-eid").value.trim();
+  const name = document.getElementById("su-name").value.trim();
+  const msid = document.getElementById("su-msid").value.trim();
+  const role = document.getElementById("su-role").value;
+  const username = document.getElementById("su-username").value.trim();
+  const password = document.getElementById("su-password").value;
+
+  if (!eid || !name || !msid || !username || !password){
+    alertBox.innerHTML = `<div class="alert alert-error">Fill in every field before creating the account.</div>`;
+    return;
+  }
+  if (accessList.some(r => r.Username === username)){
+    alertBox.innerHTML = `<div class="alert alert-error">That username is already on the access list. Choose another.</div>`;
+    return;
+  }
+
+  const newRow = {EID:eid, "Employee Name":name, MSID:msid, Role:role, Username:username, Password:password};
+  accessList.push(newRow);
+
+  alertBox.innerHTML = `<div class="alert alert-success">Account created and added to the access list. Download the updated CSV to keep it saved.</div>`;
+  document.getElementById("signupFormEl").reset();
+  document.getElementById("su-role").value = "Employee";
+
+  downloadCSV();
+});
+
+/* ---------------- logout ---------------- */
+document.getElementById("logoutBtn").onclick = () => {
+  currentUser = null;
+  document.getElementById("view-dashboard").classList.remove("active");
+  document.getElementById("view-auth").style.display = "grid";
+  document.getElementById("login-username").value = "";
+  document.getElementById("login-password").value = "";
+};
+
+document.getElementById("navExport").onclick = downloadCSV;
+
+/* ---------------- ticker ---------------- */
+const tickerFacts = [
+  ["SLA today", "94.2%", "green"],
+  ["Open tickets", "128", "amber"],
+  ["Avg handle time", "5m 42s", "green"],
+  ["Escalations", "6", "amber"],
+  ["Shift coverage", "101%", "green"],
+  ["CSAT (7d)", "4.6 / 5", "green"],
+];
+function buildTicker(){
+  const el = document.getElementById("ticker");
+  const chunk = tickerFacts.map(([label,val,tone]) =>
+    `<span>${label}: <${tone==='green'?'b':'i'}>${val}</${tone==='green'?'b':'i'}></span>`
+  ).join("");
+  el.innerHTML = chunk + chunk; // duplicate for seamless scroll
+}
+buildTicker();
+
+/* ---------------- dashboard rendering ---------------- */
+function initials(name){
+  return (name || "?").split(" ").filter(Boolean).slice(0,2).map(s=>s[0].toUpperCase()).join("");
+}
+
+function enterDashboard(user){
+  document.getElementById("view-auth").style.display = "none";
+  document.getElementById("view-dashboard").classList.add("active");
+
+  document.getElementById("avatarInitials").textContent = initials(user["Employee Name"]);
+  document.getElementById("whoName").textContent = user["Employee Name"];
+  document.getElementById("whoRole").textContent = user.Role + " · " + user.MSID;
+
+  renderDashboard(tierFor(user.Role), user);
+}
+
+function renderDashboard(tier, user){
+  const main = document.getElementById("dashboardMain");
+
+  const content = {
+    Leader: {
+      title: "Org performance overview",
+      meta: "Company-wide KPIs across every team and site",
+      kpis: [
+        {label:"Org-wide SLA", value:"94.2%", delta:"+1.4 pts vs last wk", tone:"up"},
+        {label:"Revenue-linked KPI attainment", value:"88%", delta:"+3 pts vs target", tone:"up"},
+        {label:"Attrition (rolling 90d)", value:"7.9%", delta:"-0.6 pts", tone:"up"},
+        {label:"Active headcount", value:"1,284", delta:"flat vs last mo.", tone:"flat"},
+      ],
+      table: {
+        title:"Team leaderboard",
+        cols:["Team","Manager","SLA","Trend"],
+        rows:[
+          ["North Ops","D. Reyes","96.1%","up"],
+          ["West Ops","M. Chen","93.4%","up"],
+          ["South Ops","T. Alabi","89.7%","down"],
+          ["East Ops","S. Ibarra","95.0%","flat"],
+        ]
+      },
+      bars: {
+        title:"Regional KPI attainment",
+        items:[
+          ["North", 96],["West", 91],["South", 82],["East", 94],
+        ]
+      }
+    },
+    Manager: {
+      title: "Team performance",
+      meta: "KPIs for teams under your direct management",
+      kpis: [
+        {label:"Team SLA", value:"93.4%", delta:"+0.8 pts vs last wk", tone:"up"},
+        {label:"Team KPI attainment", value:"91%", delta:"+2 pts vs target", tone:"up"},
+        {label:"Coaching sessions logged", value:"18", delta:"-2 vs plan", tone:"down"},
+        {label:"Open escalations", value:"4", delta:"+1 vs yesterday", tone:"down"},
+      ],
+      table: {
+        title:"Supervisor breakdown",
+        cols:["Supervisor","Team size","SLA","Trend"],
+        rows:[
+          ["A. Morales","12","95.2%","up"],
+          ["J. Park","10","91.0%","flat"],
+          ["R. Costa","11","88.6%","down"],
+        ]
+      },
+      bars:{
+        title:"Weekly KPI attainment by shift",
+        items:[
+          ["AM shift", 92],["PM shift", 89],["Overnight", 85],
+        ]
+      }
+    },
+    Supervisor: {
+      title: "Shift &amp; crew performance",
+      meta: "KPIs for the employees on your shift",
+      kpis: [
+        {label:"Crew SLA (today)", value:"92.7%", delta:"+1.1 pts vs yesterday", tone:"up"},
+        {label:"Avg handle time", value:"5m 51s", delta:"-9s vs target", tone:"up"},
+        {label:"Adherence", value:"96%", delta:"flat vs last shift", tone:"flat"},
+        {label:"Open coaching items", value:"3", delta:"+1 this week", tone:"down"},
+      ],
+      table:{
+        title:"Employees on shift",
+        cols:["Employee","Role","KPI score","Status"],
+        rows:[
+          ["Kim","Agent","91%","green"],
+          ["L. Vance","Agent","87%","amber"],
+          ["D. Osei","Agent","95%","green"],
+          ["R. Haddad","Agent","79%","red"],
+        ]
+      },
+      bars:{
+        title:"Crew KPI attainment",
+        items:[
+          ["Quality", 90],["Adherence", 96],["Productivity", 88],
+        ]
+      }
+    },
+    Employee: {
+      title: "My KPIs",
+      meta: "Your individual performance for this period",
+      kpis: [
+        {label:"My KPI score", value:"91%", delta:"+4 pts vs last period", tone:"up"},
+        {label:"Adherence", value:"97%", delta:"+1 pt vs target", tone:"up"},
+        {label:"Avg handle time", value:"5m 38s", delta:"-4s vs target", tone:"up"},
+        {label:"Quality score", value:"93%", delta:"flat vs last period", tone:"flat"},
+      ],
+      table:{
+        title:"My recent shifts",
+        cols:["Date","KPI score","Adherence","Status"],
+        rows:[
+          ["Jul 24","93%","98%","green"],
+          ["Jul 23","89%","95%","amber"],
+          ["Jul 22","91%","97%","green"],
+        ]
+      },
+      bars:{
+        title:"My KPI breakdown",
+        items:[
+          ["Quality", 93],["Adherence", 97],["Productivity", 88],
+        ]
+      }
+    }
+  }[tier];
+
+  const deltaClass = t => t === "up" ? "up" : t === "down" ? "down" : "flat";
+  const pillClass = s => s === "green" ? "pill-green" : s === "amber" ? "pill-amber" : s === "red" ? "pill-red" : (s==="up"?"pill-green":s==="down"?"pill-red":"pill-amber");
+  const pillLabel = s => (s==="up"?"Improving":s==="down"?"Declining":s==="flat"?"Steady":(s.charAt(0).toUpperCase()+s.slice(1)));
+
+  main.innerHTML = `
+    <div class="topbar">
+      <div>
+        <h1>${content.title}</h1>
+        <div class="meta">${content.meta}</div>
+      </div>
+      <div class="badge-tier">${tier} view</div>
+    </div>
+
+    <div class="kpi-grid">
+      ${content.kpis.map(k => `
+        <div class="kpi-card">
+          <div class="label">${k.label}</div>
+          <div class="value">${k.value}</div>
+          <div class="delta ${deltaClass(k.tone)}">${k.delta}</div>
+        </div>
+      `).join("")}
+    </div>
+
+    <div class="panel-row">
+      <div class="panel">
+        <h3>${content.table.title}</h3>
+        <table class="table">
+          <thead><tr>${content.table.cols.map(c=>`<th>${c}</th>`).join("")}</tr></thead>
+          <tbody>
+            ${content.table.rows.map(row => {
+              const last = row[row.length-1];
+              const bodyCells = row.slice(0,-1).map(c=>`<td>${c}</td>`).join("");
+              return `<tr>${bodyCells}<td><span class="pill ${pillClass(last)}">${pillLabel(last)}</span></td></tr>`;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="panel bar-list">
+        <h3>${content.bars.title}</h3>
+        ${content.bars.items.map(([label,pct]) => `
+          <div class="bar-row">
+            <div class="bar-top"><span>${label}</span><span class="mono">${pct}%</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+          </div>
+        `).join("")}
+        <div style="margin-top:18px;">
+          <button class="export-btn" onclick="downloadCSV()">Export access list (.csv)</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+</script>
+</body>
+</html>
