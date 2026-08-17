@@ -1,0 +1,20 @@
+{
+  "name": "halyard-house-backend",
+  "version": "1.0.0",
+  "description": "Booking backend for a private overnight rental",
+  "main": "server.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.11.5"
+  }
+}
